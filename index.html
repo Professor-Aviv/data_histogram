@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Histogram – Continuous Data</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f7f9fc;
+        }
+
+        h1,
+        h3,
+        h4 {
+            color: #25316D;
+        }
+
+        textarea {
+            width: 100%;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        button {
+            background: #25316D;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        button:hover {
+            background: #1b234a;
+        }
+
+        /* ===== Header ===== */
+
+        .cool-banner {
+            padding: 1rem;
+            background: linear-gradient(135deg, #37476f, #041332);
+            display: flex;
+            align-items: center;
+            color: #d4af37;
+            border-radius: 12px;
+            border: 2px solid rgba(234, 179, 8, 0.6);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px;
+        }
+
+        .header-logo img {
+            height: 120px;
+            border-radius: 6px;
+            border: 1px solid white;
+            padding: 3px;
+        }
+
+        .cool-banner-inner {
+            flex: 1;
+            text-align: center;
+        }
+
+        .cool-banner-title {
+            font-size: 2.3rem;
+            font-weight: 600;
+        }
+
+        .cool-banner-sub {
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .cool-banner-foot {
+            font-size: 0.75rem;
+            opacity: 0.65;
+        }
+
+        /* ===== Stats ===== */
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 16px;
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            font-size: 14px;
+        }
+
+        .stats-panel div {
+            text-align: center;
+        }
+
+        .sample-stats {
+            grid-template-columns: repeat(6, 1fr);
+            margin-top: 12px;
+        }
+
+        .inference-stats {
+            display: block;
+            margin-top: 12px;
+        }
+
+        .inference-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        .inference-table th,
+        .inference-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .inference-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sample-data-note {
+            font-size: 13px;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .stats-heading {
+            margin-top: 25px;
+            margin-bottom: 0;
+        }
+
+        /* ===== Controls ===== */
+
+        .bins-subtitle {
+            color: #25316D;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 16px 0 10px;
+        }
+
+        .bin-fields {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+        }
+
+        .bin-fields input {
+            width: 10ch;
+            box-sizing: content-box;
+            margin-right: 0;
+        }
+
+        .bin-fields label {
+            white-space: nowrap;
+            margin-right: 5px;
+        }
+
+        .magic-bin-button {
+            margin-top: 14px;
+        }
+
+        .bin-panel {
+            background: #f1f4fb;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 25px;
+        }
+
+        /* ===== Histogram ===== */
+
+        .histogram-wrapper {
+            background: white;
+            padding: 28px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            margin-top: 30px;
+            box-shadow: 0 6px 24px rgba(15, 23, 42, 0.055);
+        }
+
+        .distribution-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            border-bottom: 1px solid #edf0f5;
+            padding-bottom: 20px;
+            margin-bottom: 18px;
+        }
+
+        .distribution-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.25px;
+        }
+
+        .distribution-heading::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4f46e5;
+            flex: none;
+        }
+
+        .distribution-subtitle {
+            color: #64748b;
+            font-size: 12px;
+            margin: 6px 0 0 20px;
+        }
+
+        .distribution-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .distribution-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 11px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 11px;
+            white-space: nowrap;
+        }
+
+        .distribution-badge span {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .distribution-badge strong {
+            font: bold 12px Consolas, monospace;
+            color: #0f172a;
+        }
+
+        .distribution-badge.range {
+            border-color: #c7d2fe;
+            background: #eef2ff;
+        }
+
+        .distribution-badge.range span,
+        .distribution-badge.range strong { color: #3730a3; }
+
+        .bin-method-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #edf0f5;
+            margin-top: 12px;
+            padding-top: 16px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .bin-method-note code {
+            color: #334155;
+            font-size: 11px;
+        }
+
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin: 26px 0 12px;
+            font-size: 13px;
+            color: #25316D;
+        }
+
+        .chart-controls label { white-space: nowrap; }
+        .chart-controls input { margin-right: 4px; }
+        .chart-controls select { margin-right: 0; }
+        .chart-controls button { margin-left: auto; }
+
+        .chart-controls + .histogram-wrapper { margin-top: 0; }
+
+        .chart-canvas-wrap { position: relative; }
+        .hist-tooltip {
+            display: none;
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+            background: #172b4d;
+            color: white;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font: 13px/1.5 Arial, sans-serif;
+            box-shadow: 0 5px 18px #172b4d44;
+            white-space: nowrap;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="cool-banner">
+        <div class="header-logo">
+            <img src="static/apps_by_aviv_logo6.png" alt="Apps by Aviv Logo">
+        </div>
+        <div class="cool-banner-inner">
+            <div class="cool-banner-title">Histogram from Excel Data</div>
+            <div class="cool-banner-sub">
+                Paste real-valued observations and analyze their distribution
+            </div>
+            <div class="cool-banner-foot">© 2025 Professor Yossi Aviv. All rights reserved.</div>
+        </div>
+    </header>
+
+    <h4 class="stats-heading">Sample Data</h4>
+    <p class="sample-data-note">
+        Copy <strong>one numeric column</strong> from Excel and paste it below.
+        Headers and empty rows are allowed.
+    </p>
+
+    <textarea id="dataInput" rows="10" placeholder="Paste Excel column here (Ctrl+V)"></textarea>
+
+    <button onclick="loadData()">Load Data</button>
+
+    <div id="output"></div>
+
+    <script>
+        let xLabelOrientation = "horizontal";
+        let samples = [];
+        let histogramHover = null;
+
+        let histOptions = {
+            rvName: "",
+            binMin: null,
+            binMax: null,
+            binCount: 20
+        };
+
+        function firstCellTitle(text) {
+            const first = text.split(/\r?\n|\t/)[0].trim();
+            return first && isNaN(Number(first.replace(/,/g, ""))) ? first : "";
+        }
+
+        function escapeAttribute(value) {
+            return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+                .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function niceBinEndpoints(a, b, k) {
+            if (a === b) {
+                const step = a === 0 ? 1 : 10 ** Math.floor(Math.log10(Math.abs(a)));
+                const left = Math.floor(a / step - k / 2) * step;
+                return { left, right: left + k * step };
+            }
+
+            const raw = (b - a) / k;
+            const exponent = Math.floor(Math.log10(raw));
+            const unit = 10 ** exponent;
+            const scalars = [1, 2, 2.5, 5, 10];
+            let scaleIndex = scalars.findIndex(s => s * unit >= raw * (1 - 1e-12));
+            if (scaleIndex < 0) scaleIndex = 4;
+            let magnitude = 1;
+
+            // After snapping the start downward, k bins may no longer cover b.
+            // Increase to the next nice width until the coverage is guaranteed.
+            for (let i = 0; i < 100; i++) {
+                const step = scalars[scaleIndex] * unit * magnitude;
+                const left = Math.floor(a / step) * step;
+                const right = left + k * step;
+                if (right >= b - 1e-12 * Math.max(1, Math.abs(b))) {
+                    return { left: Number(left.toPrecision(12)), right: Number(right.toPrecision(12)) };
+                }
+                scaleIndex = (scaleIndex + 1) % scalars.length;
+                if (scaleIndex === 0) magnitude *= 10;
+            }
+            return { left: a, right: b };
+        }
+
+        function parseExcelColumn(text) {
+            return text
+                .split(/\r?\n|\t/)
+                .map(v => v.trim())
+                .filter(v => v !== "")
+                .map(v => v.replace(/,/g, ""))
+                .map(Number)
+                .filter(v => !isNaN(v));
+        }
+
+        function loadData() {
+            document.getElementById("output").innerHTML = "";
+            const pasted = document.getElementById("dataInput").value;
+            samples = parseExcelColumn(pasted);
+
+            if (samples.length === 0) {
+                document.getElementById("output").innerHTML =
+                    `<p style="color:red;"><strong>Error:</strong> No numeric data detected.</p>`;
+                return;
+            }
+
+            histOptions.rvName = firstCellTitle(pasted);
+
+            renderOutput();
+        }
+
+        function computeStats(data) {
+            const n = data.length;
+            const mean = data.reduce((a, b) => a + b, 0) / n;
+            const variance = data.reduce((s, x) => s + (x - mean) ** 2, 0) / (n - 1);
+            const std = Math.sqrt(variance);
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            return { mean, std, min, max, range: max - min };
+        }
+
+        function medianOf(data) {
+            const sorted = data.slice().sort((a, b) => a - b);
+            const middle = Math.floor(sorted.length / 2);
+            return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+
+        function renderOutput() {
+            const s = computeStats(samples);
+            const n = samples.length;
+            const confidenceLevels = [
+                { label: "90%", z: 1.6448536269514722 },
+                { label: "95%", z: 1.959963984540054 },
+                { label: "97.3%", z: 2.2115178091866787 },
+                { label: "99%", z: 2.5758293035489004 },
+                { label: "99.5%", z: 2.807033768343811 }
+            ];
+            const inferenceRows = confidenceLevels.map(({ label, z }) => {
+                const me = z * s.std / Math.sqrt(n);
+                return `<tr>
+                    <td>${label}</td>
+                    <td>${s.mean.toFixed(4)}</td>
+                    <td>${me.toFixed(4)}</td>
+                    <td>[ ${(s.mean - me).toFixed(4)}, ${(s.mean + me).toFixed(4)} ]</td>
+                </tr>`;
+            }).join("");
+            const niceBins = niceBinEndpoints(s.min, s.max, histOptions.binCount);
+
+
+            document.getElementById("output").innerHTML = `
+        <h4 class="stats-heading">Sample Statistics</h4>
+        <div class="stats-panel sample-stats">
+            <div><strong>n</strong><br>${n}</div>
+
+            <div><strong>Mean</strong><br>${s.mean.toFixed(4)}</div>
+            <div><strong>Std Dev</strong><br>${s.std.toFixed(4)}</div>
+            <div><strong>Min</strong><br>${s.min.toFixed(4)}</div>
+            <div><strong>Max</strong><br>${s.max.toFixed(4)}</div>
+            <div><strong>Range</strong><br>${s.range.toFixed(4)}</div>
+        </div>
+
+        <h4 class="stats-heading">Inference on the Population Mean</h4>
+        <div class="stats-panel inference-stats">
+            <table class="inference-table">
+                <thead><tr>
+                    <th>CL</th>
+                    <th>Estimated Mean</th>
+                    <th>Margin of Error</th>
+                    <th>Confidence Interval</th>
+                </tr></thead>
+                <tbody>${inferenceRows}</tbody>
+            </table>
+        </div>
+
+
+        <div class="bin-panel">
+            <h4>Histogram Parameters</h4>
+
+            <label>Data title:</label>
+            <input id="rvName"
+                   placeholder="e.g., X, Demand, Lead Time"
+                   size="20"
+                   value="${escapeAttribute(histOptions.rvName)}"><br><br>
+
+            <div class="bins-subtitle">Histogram Bins</div>
+            <div class="bin-fields">
+                <div><label>Left endpoint:</label><input id="binMin" value="${niceBins.left}"></div>
+                <div><label>Right endpoint:</label><input id="binMax" value="${niceBins.right}"></div>
+                <div><label>Number of bins:</label><input id="binCount" value="${histOptions.binCount}"></div>
+            </div>
+            <button class="magic-bin-button" onclick="magicBin()">Magic Bin</button>
+
+            <div class="bins-subtitle">Color Scheme</div>
+            <p class="sample-data-note">Conditional Coloring (below threshold 1 -&gt; Left color; above threshold 2 -&gt; Right color)</p>
+
+            <label>Left color:</label>
+            <input type="color" id="colorLeft" value="#C65D62">
+
+            <label>Threshold 1:</label>
+            <input id="threshold1" size="6">
+
+            <label>Middle color:</label>
+            <input type="color" id="colorMid" value="#557FBD">
+
+            <label>Threshold 2:</label>
+            <input id="threshold2" size="6">
+            <label>Right color:</label>
+            <input type="color" id="colorRight" value="#4C9A75">
+            <button onclick="reverseScheme()">Reverse Scheme</button>
+            <hr><br>
+
+            <button onclick="drawHistogram()">Update Histogram</button>
+            <button onclick="toggleXLabels()">Toggle X-Axis Labels</button>
+
+        </div>
+
+        <div class="chart-controls">
+                <label>Vertical scale:
+                    <select id="verticalScale" onchange="drawHistogram()">
+                        <option value="frequency">Frequency</option>
+                        <option value="percentage">Percentage</option>
+                    </select>
+                </label>
+                <label><input type="checkbox" id="showMean" onchange="drawHistogram()">Show Mean</label>
+                <label><input type="checkbox" id="showMedian" onchange="drawHistogram()">Show Median</label>
+                <button onclick="downloadHistogram()">Download PNG</button>
+        </div>
+        <div class="histogram-wrapper">
+            <div class="distribution-header">
+                <div>
+                    <div class="distribution-heading">Performance Distribution Overview</div>
+                    <p class="distribution-subtitle" id="distributionSubtitle">Distribution of ${escapeAttribute(histOptions.rvName || "Results")}</p>
+                </div>
+                <div class="distribution-badges">
+                    <div class="distribution-badge range"><span>MEAN:</span><strong>${s.mean.toFixed(4)}</strong></div>
+                    <div class="distribution-badge"><span>MEDIAN:</span><strong>${medianOf(samples).toFixed(4)}</strong></div>
+                    <div class="distribution-badge"><span>STD DEV:</span><strong>${s.std.toFixed(4)}</strong></div>
+                    <div class="distribution-badge"><span>RANGE:</span><strong>${s.range.toFixed(4)}</strong></div>
+                </div>
+            </div>
+            <div class="chart-canvas-wrap">
+                <canvas id="histCanvas" width="920" height="500"></canvas>
+                <div id="histTooltip" class="hist-tooltip"></div>
+            </div>
+            <div class="bin-method-note">
+                <span>ⓘ</span>
+                <span>Bins use intervals <code>[left edge, right edge)</code>; the final bin includes its right endpoint. Magic Bin snaps limits to clean increments.</span>
+            </div>
+        </div>
+        `;
+
+            const canvas = document.getElementById("histCanvas");
+            canvas.addEventListener("mousemove", showBinTooltip);
+            canvas.addEventListener("mouseleave", () => {
+                document.getElementById("histTooltip").style.display = "none";
+            });
+            drawHistogram();
+        }
+
+        function downloadHistogram() {
+            const canvas = document.getElementById("histCanvas");
+            const link = document.createElement("a");
+            link.download = "histogram.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        function showBinTooltip(event) {
+            if (!histogramHover) return;
+            const canvas = document.getElementById("histCanvas");
+            const tip = document.getElementById("histTooltip");
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) * canvas.width / rect.width;
+            const y = (event.clientY - rect.top) * canvas.height / rect.height;
+            const { x0, y0, topMargin, barWidth, k, a, delta, counts, axisMax, percentMode } = histogramHover;
+            if (x < x0 || x >= x0 + k * barWidth || y < topMargin || y > y0) {
+                tip.style.display = "none";
+                return;
+            }
+            const i = Math.min(k - 1, Math.floor((x - x0) / barWidth));
+            const value = percentMode ? 100 * counts[i] / samples.length : counts[i];
+            const barTop = y0 - value / axisMax * (y0 - topMargin);
+            if (counts[i] === 0 || y < barTop) {
+                tip.style.display = "none";
+                return;
+            }
+            const format = v => Number(v.toPrecision(9)).toLocaleString("en-US");
+            const left = a + i * delta;
+            const right = left + delta;
+            const pct = 100 * counts[i] / samples.length;
+            tip.textContent = `[${format(left)}, ${format(right)}${i === k - 1 ? "]" : ")"}  |  Frequency: ${counts[i]}  |  ${pct.toFixed(2)}%`;
+            const container = canvas.parentElement.getBoundingClientRect();
+            const localX = event.clientX - container.left + 14;
+            const localY = event.clientY - container.top - 42;
+            tip.style.display = "block";
+            tip.style.left = Math.max(0, Math.min(localX, container.width - tip.offsetWidth)) + "px";
+            tip.style.top = Math.max(0, localY) + "px";
+        }
+
+        function toggleXLabels() {
+            xLabelOrientation =
+                (xLabelOrientation === "horizontal") ? "vertical" : "horizontal";
+            drawHistogram();
+        }
+
+        function magicBin() {
+            if (!samples.length) return;
+            const countInput = document.getElementById("binCount");
+            const rawCount = countInput.value.trim();
+            const k = rawCount === "" ? 20 : Number(rawCount);
+            if (!Number.isInteger(k) || k <= 0) {
+                alert("Please enter a positive whole number of bins.");
+                return;
+            }
+            if (rawCount === "") countInput.value = "20";
+            const bounds = niceBinEndpoints(Math.min(...samples), Math.max(...samples), k);
+            document.getElementById("binMin").value = bounds.left;
+            document.getElementById("binMax").value = bounds.right;
+            drawHistogram();
+        }
+
+        function reverseScheme() {
+            const left = document.getElementById("colorLeft");
+            const right = document.getElementById("colorRight");
+            const previousLeft = left.value;
+            left.value = right.value;
+            right.value = previousLeft;
+            drawHistogram();
+        }
+
+        function drawHistogram() {
+            histOptions.rvName = document.getElementById("rvName").value;
+            histOptions.binMin = document.getElementById("binMin").value;
+            histOptions.binMax = document.getElementById("binMax").value;
+            histOptions.binCount = document.getElementById("binCount").value;
+
+            const a = Number(histOptions.binMin);
+            const b = Number(histOptions.binMax);
+            const k = parseInt(histOptions.binCount);
+            const rvName = histOptions.rvName.trim();
+            document.getElementById("distributionSubtitle").textContent = "Distribution of " + (rvName || "Results");
+
+            if (!(a < b && k > 0)) return;
+
+            const delta = (b - a) / k;
+            const counts = new Array(k).fill(0);
+
+            samples.forEach(x => {
+                if (x >= a && x <= b) {
+                    const idx = Math.min(Math.floor((x - a) / delta), k - 1);
+                    counts[idx]++;
+                }
+            });
+
+            const canvas = document.getElementById("histCanvas");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const W = canvas.width;
+            const H = canvas.height;
+            const titleName = rvName !== "" ? rvName : "Results";
+            const titleText = titleName;
+
+            ctx.font = "bold 20px Arial";
+            ctx.fillStyle = "#25316D";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText(titleText, W / 2, 8);
+
+            const maxCount = Math.max(0, ...counts);
+            const percentMode = document.getElementById("verticalScale").value === "percentage";
+            const maxValue = percentMode ? 100 * maxCount / samples.length : maxCount;
+            const x0 = 82;
+            const xRight = W - 32;
+            const topMargin = 64;
+            const y0 = H - (xLabelOrientation === "vertical" ? 112 : 72);
+            const plotHeight = y0 - topMargin;
+            const plotWidth = xRight - x0;
+            const barWidth = plotWidth / k;
+
+            // Clean horizontal reference lines and labeled frequency axis.
+            const roughTick = Math.max(percentMode ? 0.1 : 1, maxValue / 5);
+            const magnitude = 10 ** Math.floor(Math.log10(roughTick));
+            const tickStep = [1, 2, 2.5, 5, 10]
+                .map(v => v * magnitude).find(v => v >= roughTick) || 10 * magnitude;
+            const axisMax = Math.max(tickStep, Math.ceil(maxValue / tickStep) * tickStep);
+
+            ctx.font = "12px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            for (let tick = 0; tick <= axisMax + tickStep * 1e-8; tick += tickStep) {
+                const y = y0 - (tick / axisMax) * plotHeight;
+                ctx.strokeStyle = "#e6ebf3";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x0, y);
+                ctx.lineTo(xRight, y);
+                ctx.stroke();
+                ctx.fillStyle = "#172b4d";
+                const tickLabel = Number(tick.toPrecision(8)).toLocaleString("en-US") + (percentMode ? "%" : "");
+                ctx.fillText(tickLabel, x0 - 12, y);
+            }
+
+            ctx.save();
+            ctx.translate(23, topMargin + plotHeight / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = "bold 13px Arial";
+            ctx.fillStyle = "#25316D";
+            ctx.fillText(percentMode ? "Percentage" : "Frequency", 0, 0);
+            ctx.restore();
+
+            const threshold1 = document.getElementById("threshold1").value.trim();
+            const threshold2 = document.getElementById("threshold2").value.trim();
+            const t1 = threshold1 === "" ? NaN : Number(threshold1);
+            const t2 = threshold2 === "" ? NaN : Number(threshold2);
+
+            const colorLeft = document.getElementById("colorLeft").value;
+            const colorMid = document.getElementById("colorMid").value;
+            const colorRight = document.getElementById("colorRight").value;
+
+            counts.forEach((c, i) => {
+                const value = percentMode ? 100 * c / samples.length : c;
+                const h = (value / axisMax) * plotHeight;
+                const x = x0 + i * barWidth;
+                const y = y0 - h;
+
+                const binLeft = a + i * delta;
+                const binRight = binLeft + delta;
+                const binCenter = 0.5 * (binLeft + binRight);
+
+                let fillColor = colorMid;
+
+                if (!isNaN(t1) && binCenter < t1) {
+                    fillColor = colorLeft;
+                }
+                if (!isNaN(t2) && binCenter > t2) {
+                    fillColor = colorRight;
+                }
+
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(x, y, barWidth, h);
+
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 0.8;
+                ctx.strokeRect(x, y, barWidth, h);
+            });
+
+            // Optional location markers, drawn after bars for visibility.
+            const median = medianOf(samples);
+            const mean = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+            const markers = [
+                { checked: document.getElementById("showMean").checked, value: mean, label: "Mean", color: "#b45309", dash: [8, 5] },
+                { checked: document.getElementById("showMedian").checked, value: median, label: "Median", color: "#166534", dash: [3, 4] }
+            ].filter(marker => marker.checked && marker.value >= a && marker.value <= b);
+            markers.forEach((marker, index) => {
+                const x = x0 + (marker.value - a) / (b - a) * plotWidth;
+                ctx.save();
+                ctx.strokeStyle = marker.color;
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash(marker.dash);
+                ctx.beginPath();
+                ctx.moveTo(x, topMargin);
+                ctx.lineTo(x, y0);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = marker.color;
+                ctx.font = "bold 12px Arial";
+                ctx.textAlign = x > xRight - 90 ? "right" : "left";
+                ctx.fillText(marker.label, x + (x > xRight - 90 ? -6 : 6), topMargin + 15 + index * 18);
+                ctx.restore();
+            });
+
+            ctx.strokeStyle = "#56647b";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(x0, topMargin);
+            ctx.lineTo(x0, y0);
+            ctx.lineTo(xRight, y0);
+            ctx.stroke();
+
+            ctx.fillStyle = "#172b4d";
+            ctx.font = "12px Arial";
+            const labelPrecision = delta < 0.01 ? 4 : delta < 0.1 ? 3 : 2;
+            const labelEvery = xLabelOrientation === "horizontal"
+                ? Math.max(1, Math.ceil(52 / barWidth)) : 1;
+
+            for (let i = 0; i <= k; i++) {
+                if (i !== k && i % labelEvery !== 0) continue;
+                const val = (a + i * delta).toFixed(labelPrecision);
+                const x = x0 + i * barWidth;
+
+                if (xLabelOrientation === "horizontal") {
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(val, x, y0 + 11);
+                } else {
+                    ctx.save();
+                    ctx.translate(x + 5, y0 + 10);
+                    ctx.rotate(Math.PI / 2);
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(val, 0, 0);
+                    ctx.restore();
+                }
+            }
+            histogramHover = { x0, y0, topMargin, barWidth, k, a, delta, counts, axisMax, percentMode };
+        }
+    </script>
+
+</body>
+
+</html>
