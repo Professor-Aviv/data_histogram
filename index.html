@@ -540,6 +540,16 @@
                 </label>
                 <label><input type="checkbox" id="showMean" onchange="drawHistogram()">Show Mean</label>
                 <label><input type="checkbox" id="showMedian" onchange="drawHistogram()">Show Median</label>
+                <label><input type="checkbox" id="showCI" onchange="drawHistogram()">Show Confidence Interval</label>
+                <label>CL:
+                    <select id="ciLevel" aria-label="Confidence level" onchange="drawHistogram()">
+                        <option value="90">90%</option>
+                        <option value="95" selected>95%</option>
+                        <option value="97.3">97.3%</option>
+                        <option value="99">99%</option>
+                        <option value="99.5">99.5%</option>
+                    </select>
+                </label>
                 <button onclick="downloadHistogram()">Download PNG</button>
         </div>
         <div class="histogram-wrapper">
@@ -787,6 +797,80 @@
                 ctx.fillText(marker.label, x + (x > xRight - 90 ? -6 : 6), topMargin + 15 + index * 18);
                 ctx.restore();
             });
+
+            // Optional confidence interval for the population mean, centered at
+            // the observed sample mean. Uses the same z-based approximation as
+            // the inference table (not a prediction interval for observations).
+            if (document.getElementById("showCI").checked && samples.length > 1) {
+                const ciZ = {
+                    "90": 1.6448536269514722,
+                    "95": 1.959963984540054,
+                    "97.3": 2.2115178091866787,
+                    "99": 2.5758293035489004,
+                    "99.5": 2.807033768343811
+                };
+                const level = document.getElementById("ciLevel").value;
+                const stats = computeStats(samples);
+                const margin = ciZ[level] * stats.std / Math.sqrt(samples.length);
+                const lower = stats.mean - margin;
+                const upper = stats.mean + margin;
+                const lineColor = "#7c3aed";
+                const toX = value => x0 + (value - a) / (b - a) * plotWidth;
+
+                // A light interval ribbon and its two limits. Clip the drawing
+                // to the plotting area without changing the bin limits.
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(x0, topMargin, plotWidth, plotHeight);
+                ctx.clip();
+                const xL = toX(lower);
+                const xU = toX(upper);
+                ctx.fillStyle = "rgba(124, 58, 237, 0.08)";
+                ctx.fillRect(xL, topMargin, xU - xL, plotHeight);
+                ctx.strokeStyle = lineColor;
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([6, 4]);
+                [xL, xU].forEach(x => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, topMargin);
+                    ctx.lineTo(x, y0);
+                    ctx.stroke();
+                });
+                ctx.restore();
+
+                // End-point labels face away from each other, so they remain
+                // readable even when the confidence limits are close together.
+                ctx.save();
+                ctx.font = "bold 12px Arial";
+                ctx.textBaseline = "middle";
+                const labels = [
+                    { x: toX(lower), text: "LCL " + lower.toFixed(4), side: "left" },
+                    { x: toX(upper), text: "UCL " + upper.toFixed(4), side: "right" }
+                ];
+                labels.forEach(item => {
+                    const width = ctx.measureText(item.text).width + 14;
+                    let left = item.side === "left" ? item.x - width - 5 : item.x + 5;
+                    left = Math.max(x0 + 2, Math.min(left, xRight - width - 2));
+                    const top = topMargin + 22;
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.94)";
+                    ctx.strokeStyle = lineColor;
+                    ctx.lineWidth = 1;
+                    ctx.fillRect(left, top, width, 23);
+                    ctx.strokeRect(left, top, width, 23);
+                    ctx.fillStyle = "#5b21b6";
+                    ctx.textAlign = "left";
+                    ctx.fillText(item.text, left + 7, top + 11.5);
+                });
+                ctx.restore();
+                // The title is on the exported canvas, so the PNG also shows CL.
+                ctx.save();
+                ctx.fillStyle = "#5b21b6";
+                ctx.font = "bold 13px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText(level + "% CI for population mean", W / 2, 37);
+                ctx.restore();
+            }
 
             ctx.strokeStyle = "#56647b";
             ctx.lineWidth = 1.2;
